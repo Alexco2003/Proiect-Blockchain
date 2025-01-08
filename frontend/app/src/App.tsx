@@ -72,19 +72,42 @@ const getBalance = async (account: string) => {
 
 
 
-  return (
-    <div className="App">
-      <h1>Crowdfunding dApp</h1>
+return (
+  <div className="App">
+    <header className="App-header">
+      <h1>FundChain</h1>
+    </header>
+
+  <section className="App-description">
+    <p>
+      Welcome to <strong>FundChain</strong>, a decentralized crowdfunding platform (dApp) built on blockchain.
+      Connect your wallet, create and explore projects, and support innovative ideas securely and transparently.
+    </p>
+  </section>
+
+    <main className="App-main">
       {!account ? (
-        <button onClick={connectWallet}>Connect Wallet</button>
+        <div className="Account-container">
+          <button className="Connect-button" onClick={connectWallet}>
+            Connect Wallet
+          </button>
+        </div>
       ) : (
-        <div>
-          <p><strong>Connected Account:</strong> {account}</p>
-          <p><strong>Balance:</strong> {balance} ETH</p>
+        <div className="Account-container">
+          <h2>Account Information</h2>
+          <p>
+            <strong>Connected Account:</strong> {account}
+          </p>
+          <p>
+            <strong>Balance:</strong> {balance} ETH
+          </p>
         </div>
       )}
-    </div>
-  );
+    </main>
+  </div>
+);
+
+
 }
 
 export default App;

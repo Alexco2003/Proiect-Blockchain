@@ -9,6 +9,7 @@ abstract contract DonationsManager {
     uint[] public finalTopDonations; // Stores final top donations
 
     event DonationsWithdrawnEvent(address indexed account, uint totalDonations); // Event to log withdrawals
+    event DonationsWithdrawnEventIfCancelled (address indexed account); // Event to log withdrawals if project is cancelled
 
     // Function to withdraw all donations by summing up donations and resetting the mapping
     function withdrawDonations() public {
@@ -29,6 +30,16 @@ abstract contract DonationsManager {
         payable(msg.sender).transfer(totalDonations);
 
         emit DonationsWithdrawnEvent(msg.sender, totalDonations);
+    }
+
+    // Function to withdraw donations if the project is cancelled
+     function withdrawDonationsIfCancelled() public {
+        uint amount = donations[msg.sender];
+        require(amount > 0, "No donations available to withdraw");
+        donations[msg.sender] = 0;
+        payable(msg.sender).transfer(amount);
+
+        emit DonationsWithdrawnEventIfCancelled(msg.sender);
     }
 
     // Capture the current top donors before resetting donations

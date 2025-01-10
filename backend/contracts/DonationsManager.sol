@@ -104,4 +104,8 @@ abstract contract DonationsManager {
     function getUserDonation(address account) public view returns (uint) {
         return donations[account];
     }
+
+    function multiplier(uint amount) public pure returns (uint) {
+        return amount * 2;
+    }
 }

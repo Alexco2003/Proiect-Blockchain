@@ -105,7 +105,8 @@ abstract contract DonationsManager {
         return donations[account];
     }
 
-    function multiplier(uint amount) public pure returns (uint) {
-        return amount * 2;
+    function tax(uint amount) public pure returns (uint) {
+    return (amount * 95) / 100;
     }
+
 }

@@ -94,6 +94,10 @@ contract Project is Ownable, DonationsManager{
         return (donationRecord.totalAmount, donationRecord.donationCount);
     }
 
+    function getBalance() public view returns (uint) {
+        return address(this).balance;
+    }
+
     // Function to donate to the project
     function donate() external payable canDonate {
         address donor = msg.sender;
@@ -123,6 +127,14 @@ contract Project is Ownable, DonationsManager{
     // Function to cancel the project
     function cancelProject() public onlyOwner {
         require(status == Status.Ongoing, "Project is not ongoing");
+
+        // Iterate through the donors array and update their donation amounts
+        for (uint i = 0; i < donors.length; i++) {
+        address donor = donors[i];
+        uint originalDonation = donations[donor];
+        uint updatedDonation = tax(originalDonation); // Apply the tax
+        donations[donor] = updatedDonation; // Save the updated donation
+        }
 
         status = Status.Cancelled;
 

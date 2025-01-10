@@ -86,8 +86,97 @@ describe("Project", function () {
 
   });
 
+  describe("Donations", function () {
+    it("Should allow donations and update records correctly", async () => {
+      const { project, otherAccount } = await loadFixture(deployContractAndSetVariables);
 
+      const donationAmount = ethers.parseEther("1");
+      await project.connect(otherAccount).donate({ value: donationAmount });
 
+      const donationRecord = await project.connect(otherAccount).getDonationRecord();
+
+      expect(donationRecord[0]).to.equal(donationAmount); // Total donated
+      expect(donationRecord[1]).to.equal(1); // Count of donations
+    });
+
+    it("Should revert if donation is zero", async () => {
+      const { project, otherAccount } = await loadFixture(deployContractAndSetVariables);
+
+      await expect(
+        project.connect(otherAccount).donate({ value: 0 })
+      ).to.be.revertedWith("Donation must be greater than zero");
+    });
+  });
+
+  describe("Project Completion and Cancellation", function () {
+    it("Should allow the owner to complete the project when the goal is reached", async () => {
+      const { project, owner, otherAccount } = await loadFixture(deployContractAndSetVariables);
+
+      const donationAmount = ethers.parseEther("10");
+      await project.connect(otherAccount).donate({ value: donationAmount });
+
+      await project.connect(owner).completeProject();
+
+      const status = await project.getStatus();
+      expect(status).to.equal(1); // Status.Completed
+    });
+
+    it("Should revert if completion is attempted before reaching the goal", async () => {
+      const { project, owner, otherAccount } = await loadFixture(deployContractAndSetVariables);
+
+      const donationAmount = ethers.parseEther("5");
+      await project.connect(otherAccount).donate({ value: donationAmount });
+
+      await expect(
+        project.connect(owner).completeProject()
+      ).to.be.revertedWith("Goal not met yet");
+    });
+
+    it("Should allow the owner to cancel the project", async () => {
+      const { project, owner } = await loadFixture(deployContractAndSetVariables);
+
+      await project.connect(owner).cancelProject();
+
+      const status = await project.getStatus();
+      expect(status).to.equal(2); // Status.Cancelled
+    });
+  });
+
+  describe("Withdrawals", function () {
+    it("Should allow the owner to withdraw donations after completion", async () => {
+      const { project, owner, otherAccount } = await loadFixture(deployContractAndSetVariables);
+
+      const donationAmount = ethers.parseEther("10");
+      await project.connect(otherAccount).donate({ value: donationAmount });
+
+      await project.connect(owner).completeProject();
+
+      const initialBalance = await ethers.provider.getBalance(owner.address);
+      const withdrawTx = await project.connect(owner).withdrawDonations();
+      const withdrawReceipt = await withdrawTx.wait();
+
+      const finalBalance = await ethers.provider.getBalance(owner.address);
+
+      expect(finalBalance).to.be.greaterThan(initialBalance);
+    });
+
+    it("Should allow donors to withdraw if the project is cancelled", async () => {
+      const { project, owner, otherAccount } = await loadFixture(deployContractAndSetVariables);
+
+      const donationAmount = ethers.parseEther("5");
+      await project.connect(otherAccount).donate({ value: donationAmount });
+
+      await project.connect(owner).cancelProject();
+
+      const initialBalance = await ethers.provider.getBalance(otherAccount.address);
+      const refundTx = await project.connect(otherAccount).withdrawDonationsIfCancelled();
+      const refundReceipt = await refundTx.wait();
+
+      const finalBalance = await ethers.provider.getBalance(otherAccount.address);
+
+      expect(finalBalance).to.be.greaterThan(initialBalance);
+    });
+  });
 
 });
 

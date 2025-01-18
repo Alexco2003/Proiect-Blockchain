@@ -88,3 +88,15 @@
 .Connect-button:hover {
   background-color: darkgreen;
 }
+
+.status-ongoing {
+  color: blue;
+}
+
+.status-completed {
+  color: green;
+}
+
+.status-cancelled {
+  color: red;
+}

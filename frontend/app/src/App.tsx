@@ -39,9 +39,13 @@ import { useState } from 'react';
 import { ethers } from 'ethers';
 import './App.css';
 
+import { contractAddress } from './others/contractAddress';
+
 function App() {
   const [account, setAccount] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
+
+  console.log("Contract Address:", contractAddress);
 
   const connectWallet = async () => {
     if (typeof window.ethereum !== 'undefined') {

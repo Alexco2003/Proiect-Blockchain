@@ -185,4 +185,24 @@ export const fetchLiveTopDonors = async (projectAddress: string, count: number) 
     }
   };
 
+export const fetchDonationsFromContract = async (projectAddress: string): Promise<{ donor: string; totalAmount: number; donationCount: number }[]> => {
+
+    const projectContract = await initializeProjectContract(projectAddress);
+
+    try {
+      const [donors, amounts, counts] = await projectContract.getAllDonations();
+
+      const donations = donors.map((donor: string, index: number) => ({
+        donor,
+        totalAmount: Number(amounts[index]),
+        donationCount: Number(counts[index]),
+      }));
+
+      return donations;
+    } catch (error: any) {
+      console.error("Error fetching donations:", error.message);
+      return [];
+    }
+  };
+
 

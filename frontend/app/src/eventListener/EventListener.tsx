@@ -30,7 +30,9 @@ const EventListener: React.FC = () => {
         console.log('Fetching past projects');
         const filter = contract.filters.ProjectCreated();
         if (provider) {
+          console.log('Provider found');
          const logs = await provider.getLogs({ ...filter, fromBlock: 0, toBlock: 'latest' });
+         console.log('Logs', logs);
 
             for (const log of logs) {
                 const parsedLog = contract.interface.parseLog(log);
@@ -168,6 +170,7 @@ const EventListener: React.FC = () => {
                     );
                     dispatch(resetUserWithdrawalAmount({ userAddress: donor, projectAddress }));
                 });
+
             }
 
         fetchPastProjects();

@@ -35,83 +35,106 @@ function App() {
 export default App
 */
 
-import { useState } from 'react';
-import { ethers } from 'ethers';
-import './App.css';
-
-import { contractAddress } from './others/contractAddress';
+import { useEffect, useState } from "react";
+import { getBalance, requestAccount } from "./services/contractServices";
+import { ToastContainer } from "react-toastify";
+import ConnectWalletPage from "./pages/ConnectWalletPage";
+import Home from "./pages/Home";
+import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
+import { AppBar, Tab, Tabs, Toolbar, Typography } from "@mui/material";
+import EventListener from "./eventListener/EventListener";
+import { ThemeProvider } from "@mui/material/styles";
+import theme from "./theme/theme";
 
 function App() {
   const [account, setAccount] = useState<string | null>(null);
-  const [balance, setBalance] = useState<string | null>(null);
+  const [balance, setBalance] = useState<string>("0");
 
-  console.log("Contract Address:", contractAddress);
 
-  const connectWallet = async () => {
-    if (typeof window.ethereum !== 'undefined') {
-        try {
-            const accounts = (await window.ethereum.request({
-                method: 'eth_requestAccounts',
-            })) as string[];
+  useEffect(() => {
+    const fetchCurAccount = async () => {
+      const account = await requestAccount();
+      setAccount(account);
+    };
+    fetchCurAccount();
+  }, []);
 
-            setAccount(accounts[0]);
-            getBalance(accounts[0]);
-        } catch (error) {
-            console.error('User rejected connection', error);
-        }
-    } else {
-        alert('MetaMask is not installed! Please install MetaMask to use this app.');
+  useEffect(() => {
+    const handleAccountChanged = (newAccounts: any) =>
+      setAccount(newAccounts.length > 0 ? newAccounts[0] : null);
+
+    if (window.ethereum) {
+      (window.ethereum as any).on("accountsChanged", handleAccountChanged);
     }
-};
+    return () => {
+      (window.ethereum as any)?.removeListener("accountsChanged", handleAccountChanged);
+    };
+  });
 
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (!account) {
+        return;
+      }
+      const balance = await getBalance(account);
+      setBalance(balance || "0");
+    };
+    fetchBalance();
+  }, [account]);
 
+  const updateBalance = async () => {
+    if (!account) {
+      return;
+    }
+    const balance = await getBalance(account);
+    setBalance(balance || "0");
+  };
 
-const getBalance = async (account: string) => {
-  if (window.ethereum) {
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      const balance = await provider.getBalance(account);
-      setBalance(ethers.formatEther(balance));
-  }
-};
+  return (
+  <ThemeProvider theme={theme}>
+    <BrowserRouter>
+      <div>
+        <ToastContainer />
 
+        <EventListener />
+        {!account ? (
+          <ConnectWalletPage setAccount={setAccount} />
+        ) : (
+          <>
+            <AppBar position="static">
+              <Toolbar>
+                <Typography variant="h6">
+                  <strong>Fundchain</strong> - a decentralized crowdfunding platform (dApp) built on blockchain.
+                </Typography>
+                <Tabs
+                  value={false}
+                  textColor="inherit"
+                  indicatorColor="secondary"
+                  sx={{ marginLeft: "auto" }}
+                >
+                  <Tab label="Home" to="/" component={Link} />
 
-
-return (
-  <div className="App">
-    <header className="App-header">
-      <h1>FundChain</h1>
-    </header>
-
-  <section className="App-description">
-    <p>
-      Welcome to <strong>FundChain</strong>, a decentralized crowdfunding platform (dApp) built on blockchain.
-      Connect your wallet, create and explore projects, and support innovative ideas securely and transparently.
-    </p>
-  </section>
-
-    <main className="App-main">
-      {!account ? (
-        <div className="Account-container">
-          <button className="Connect-button" onClick={connectWallet}>
-            Connect Wallet
-          </button>
-        </div>
-      ) : (
-        <div className="Account-container">
-          <h2>Account Information</h2>
-          <p>
-            <strong>Connected Account:</strong> {account}
-          </p>
-          <p>
-            <strong>Balance:</strong> {balance} ETH
-          </p>
-        </div>
-      )}
-    </main>
-  </div>
-);
-
-
+                </Tabs>
+              </Toolbar>
+            </AppBar>
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <Home
+                    account={account}
+                    balance={balance}
+                    updateBalance={updateBalance}
+                  />
+                }
+              />
+            </Routes>
+          </>
+        )}
+      </div>
+    </BrowserRouter>
+  </ThemeProvider>
+  );
 }
 
 export default App;

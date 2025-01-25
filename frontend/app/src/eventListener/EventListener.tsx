@@ -29,9 +29,25 @@ const EventListener: React.FC = () => {
     const fetchPastProjects = async () => {
         console.log('Fetching past projects');
         const filter = contract.filters.ProjectCreated();
+        console.log("Filter:", filter);
+        console.log("Frontend ABI:", CrowdfundingABI);
+        console.log("Provider Network:", await provider?.getNetwork());
+        const logs2 = await provider?.getLogs({
+          ...filter,
+          fromBlock: "earliest",
+          toBlock: "latest",
+        });
+        console.log("Logs with full range:", logs2);
+
+        const logs = await provider?.getLogs({ fromBlock: 0, toBlock: 6 });
+        console.log("Unfiltered logs:", logs);
+
         if (provider) {
           console.log('Provider found');
-         const logs = await provider.getLogs({ ...filter, fromBlock: 0, toBlock: 'latest' });
+          const blockNumber = await provider.getBlockNumber();
+          console.log("Current block number:", blockNumber);
+
+         const logs = await provider.getLogs({ ...filter, fromBlock: 0, toBlock: 3 });
          console.log('Logs', logs);
 
             for (const log of logs) {
